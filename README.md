@@ -1,65 +1,120 @@
-# Aviation Accident Analysis: Which Aircraft Are Safest to Insure?
+# Object Oriented Programming - Lab
 
-**Author:** Ian Wakali ([@Wakali-Ian](https://github.com/Wakali-Ian))
+A library management system built with Python classes and inheritance. This lab is part of the Flatiron School Data Science course (Course 0, Week 1, Module 7).
 
-## Business problem
-An airline/aircraft insurer wants to know which airplane **makes and models** have a low rate of total destruction and a low likelihood of fatal or serious occupant injury **when an accident happens**, and which general conditions drive those outcomes. The client wants **separate recommendations for small aircraft and larger passenger aircraft**, and only for professionally built airplanes that could still be flying (events from **1983** onward, assuming a 40-year life).
+## Overview
 
-## Data
-NTSB aviation accident records (1948-2022, 88,889 rows) in `data/AviationData.csv` ([Kaggle source](https://www.kaggle.com/datasets/khsamaha/aviation-accident-database-synopses)). After cleaning: **59,990 accidents, 56 makes, ~4,700 plane types** (`data/cleaned_aviation_data.csv`).
+Libraries hold different kinds of items (books, magazines, DVDs) that share some behaviour but also have details of their own. This project models that with a base class, `LibraryItem`, and three child classes that inherit from it and extend it.
 
-## Repository structure
+## Learning Objectives
+
+- Define a parent (base) class
+- Define specific attributes and methods
+- Define child classes using inheritance
+- Instantiate objects and access or run their attributes and methods
+
+## Class Hierarchy
+
 ```
-.
-├── Aviation_Accidents_Cleaning.ipynb        # Part 1: load, inspect, clean, derive metrics, save csv
-├── Aviation_Accidents_Data_Analysis.ipynb   # Part 2: EDA, recommendations, other factors
-├── data/
-│   ├── AviationData.csv                     # raw data
-│   ├── USState_Codes.csv
-│   └── cleaned_aviation_data.csv            # output of notebook 1
-├── images/                                  # figures used below
-└── README.md
+LibraryItem
+├── Book
+├── Magazine
+└── DVD
 ```
 
-## Method (short)
-- **Filters:** airplanes only (missing `Aircraft.Category` imputed from make/model, then make, then engine type); `Amateur.Built == No`; `Event.Date >= 1983`.
-- **Metrics:** `Fatal.Serious.Fraction = (fatal + serious) / total occupants`; `Destroyed = 1` if damage is "Destroyed".
-- **Cleaning:** standardised and merged make names, kept makes with >= 50 records, `Plane.Type = Make + Model` (model labels are not unique across makes), placeholders (`Unknown`, `UNK`) turned into NaN, rare categories grouped/removed, columns with <= 20,000 non-nulls dropped.
-- **Small vs large:** a plane type is *large* if >= 25% of its accidents had 20+ people aboard (threshold of 20 applied per plane type, so one data error cannot turn a Piper into a jet).
-- **Statistical robustness:** minimum 10 accidents per group (30 in the robustness check), 95% confidence intervals on every bar, chi-square / Mann-Whitney / Kruskal-Wallis tests for factors.
+### `LibraryItem` (base class)
 
-## Key findings
-Baseline per accident: **small** aircraft 27.5% of occupants fatally/seriously injured and 21.4% destroyed; **large** aircraft 10.7% and 11.8%.
-
-### Recommended makes
-| | Recommended (well supported) | Watch (small samples) |
+| Attribute | Type | Notes |
 |---|---|---|
-| Small | **Maule** (n=571, 15.4% injured, 9.3% destroyed), **Aviat**, **Waco**, **Helio**, **Diamond** | Bombardier small models (n=19) |
-| Large | **McDonnell Douglas** (n=228, 3.6% / 7.0%), **Boeing** (n=852, 10.5% / 11.2%) | Bombardier, Embraer, Canadair |
+| `title` | str | Title of the item |
+| `author` | str | Author of the item |
+| `publication_year` | int | Year published |
+| `is_available` | bool | Defaults to `True` |
 
-![Makes mean fraction](images/makes_mean_fraction.png)
-![Makes destroyed](images/makes_destroyed.png)
+| Method | Description |
+|---|---|
+| `display_info()` | Prints the item's attributes using f-strings |
+| `checkout()` | Sets `is_available` to `False` |
+| `return_item()` | Sets `is_available` to `True` |
 
-### Recommended plane types
-- **Large:** Boeing 777, Boeing 757, McDonnell Douglas MD-88 / MD-80 / DC-9-31, Bombardier CL-600-2B19, Boeing 727-200; the Boeing 737 is solid and best measured (n=121, 13.4%).
-- **Small (>= 30 accidents):** Piper PA-18-160 and PA-20, Cessna 180A and 185 family, Beech C-23.
+### `Book(LibraryItem)`
 
-![Large types](images/large_types_mean.png)
-![Small types](images/small_types.png)
+- Adds `isbn` (int) and `publisher` (str)
+- Calls `super().__init__()` for the shared attributes
+- Overrides `display_info()` and uses `super()` to print the shared fields before the book-specific ones
 
-### Factors that drive outcomes
-1. **Weather:** an IMC accident injures 68% (small) / 22% (large) of occupants versus 23% / 6% in VMC, and destroys the aircraft 60% / 25% vs 17% / 6% (p < 1e-15).
-![Weather](images/weather.png)
-2. **Number of engines:** twin-engine light aircraft do *worse* (35% injured, 32% destroyed) than single-engine (25%, 19%); for large jets engine count makes no significant difference.
-![Engines](images/engines.png)
-3. **Phase of flight (bonus):** taxi and landing accidents are mostly minor (< 4% injured), maneuvering (53%), climb (41%) and cruise (35%) are the deadliest.
-![Phase](images/phase.png)
+### `Magazine(LibraryItem)`
 
-## Limitations
-No flight-hour (exposure) data, so figures are *risk given an accident*, not accident rates; occupancy is a proxy for aircraft size; some model spellings remain unmerged; associations are not controlled for pilot experience or operation type.
+- Adds `issue_number` (int) and `publication_month` (str)
+- Calls `super().__init__()` for the shared attributes
+- Overrides `display_info()` to include the magazine-specific fields
 
-## How to run
-```bash
-pip install pandas numpy matplotlib seaborn scipy jupyter
-jupyter notebook   # run the Cleaning notebook first, then the Data Analysis notebook
+### `DVD(LibraryItem)`
+
+- Adds `duration` (minutes, int), `director` (str) and `genres` (set)
+- `author` defaults to `'N/A'`
+- New method `add_genre(genre)` adds a genre string to the `genres` set
+
+## Example Usage
+
+```python
+book1 = Book(title='Dracula', author='Bram Stoker', publication_year=1897,
+             isbn=1000, publisher='Archibald')
+
+dvd1 = DVD(title='The Matrix', publication_year=1999, duration=136,
+           director='The Wachowskis', genres={'action', 'sci-fi'})
+
+book1.display_info()
+# Title: Dracula
+# Author: Bram Stoker
+# Publication Year: 1897
+# Available: True
+# ISBN: 1000
+# Publisher: Archibald
+
+book1.checkout()
+print(book1.is_available)   # False
+book1.return_item()
+print(book1.is_available)   # True
+
+dvd1.add_genre('thriller')
+print(dvd1.genres)          # {'action', 'sci-fi', 'thriller'} (set order may vary)
 ```
+
+## Running the Notebook
+
+1. Clone the repository:
+```bash
+   git clone https://github.com/Wakali-Ian/DS_Course0_Week1_Module7_OOPLab.git
+   cd DS_Course0_Week1_Module7_OOPLab
+```
+2. Activate the course environment:
+```bash
+   conda activate learn-env
+```
+3. Start Jupyter and open `oop_lab.ipynb`:
+```bash
+   jupyter notebook
+```
+4. Use **Kernel → Restart & Run All** to run every cell.
+
+## Files
+
+| File | Description |
+|---|---|
+| `oop_lab.ipynb` | Completed lab notebook (Steps 1 to 7) |
+| `README.md` | Project overview |
+
+## Possible Improvements (Step 7)
+
+These ideas were not required for the lab:
+
+- Make `checkout()` check whether the item is already checked out
+- Add data validation and string standardisation for attributes
+- Store items in a database so they can be searched
+- Handle multiple copies of the same item
+- Add more item types such as `Audiobook` or `Journal`, plus search and sort methods
+
+## Author
+
+Wakali-Ian
